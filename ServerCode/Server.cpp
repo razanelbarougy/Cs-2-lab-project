@@ -186,6 +186,27 @@ use_awaitable
 );
 }
 }
+else if (type == "fetchOnlineUsers") {
+std::string response = "{\"type\":\"onlineUsersResponse\",\"sender\":\"server\",\"payload\":[";
+
+bool first = true;
+for (const auto& pair : connectedUsers) {
+if (!first) {
+response += ",";
+}
+
+response += "\"" + pair.first + "\"";
+first = false;
+}
+
+response += "]}\n";
+
+co_await boost::asio::async_write(
+*socket,
+boost::asio::buffer(response),
+use_awaitable
+);
+}
 }
 else {
 if (ec == boost::asio::error::eof) {
@@ -207,7 +228,6 @@ break;
 
 // Coroutine to listen for incoming connections
 awaitable<void> listener() {
-// We grab a handle to the engine that is running this coroutine
 auto io_ctx = co_await boost::asio::this_coro::executor;
 
 tcp::acceptor acceptor(io_ctx, { tcp::v4(), 54321 });
@@ -215,11 +235,9 @@ tcp::acceptor acceptor(io_ctx, { tcp::v4(), 54321 });
 std::cout << "Server is listening on 127.0.0.1: port 54321...\n";
 
 while (true) {
-// Accept a new connection
 auto [ec, socket] = co_await acceptor.async_accept(as_tuple(use_awaitable));
 
 if (!ec) {
-// Spawn a new coroutine to handle this specific client
 std::cout << "Client connected.\n";
 
 auto clientSocket = std::make_shared<tcp::socket>(std::move(socket));
@@ -234,10 +252,8 @@ std::cout << "Accept error: " << ec.message() << "\n";
 int main() {
 boost::asio::io_context io_context;
 
-// Start the main listener coroutine
 co_spawn(io_context, listener(), detached);
 
-// Run the event loop
 io_context.run();
 
 return 0;

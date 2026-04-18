@@ -18,10 +18,12 @@ public:
     void sendTestMessage();
     void sendChatMessage(const QString &sender, const QString &text);
     void sendPrivateMessage(const QString &sender, const QString &reciever, const QString &text);
+    void fetchOnlineUsers();
 
 signals:
     void statusChanged(const QString &status);
     void messageReceived(const QString &message);
+    void onlineUsersReceived(const QStringList &users);
 
 private slots:
     void onConnected();

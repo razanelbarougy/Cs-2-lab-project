@@ -1,6 +1,7 @@
 #include "networkclient.h"
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
 
 NetworkClient::NetworkClient(QObject *parent)
     : QObject(parent), socket(new QTcpSocket(this))
@@ -155,7 +156,9 @@ void NetworkClient::onReadyRead()
     QByteArray data = socket->readAll();
 
     QJsonDocument doc = QJsonDocument::fromJson(data);
-    if (!doc.isObject()) return;
+    if (!doc.isObject()) {
+        return;
+    }
 
     QJsonObject obj = doc.object();
 
@@ -173,6 +176,27 @@ void NetworkClient::onReadyRead()
         QString text = payload["text"].toString();
         QString receiver = payload["receiver"].toString();
 
-        emit messageReceived("[Private] " + sender + ": " + text);
+        emit messageReceived("[Private] " + sender + " -> " + receiver + ": " + text);
     }
+    else if (type == "onlineUsersResponse") {
+        QJsonArray usersArray = obj["payload"].toArray();
+        QStringList users;
+
+        for (const QJsonValue &value : std::as_const(usersArray)) {
+            users.append(value.toString());
+        }
+
+        emit onlineUsersReceived(users);
+    }
+}
+
+void NetworkClient::fetchOnlineUsers()
+{
+    QJsonObject message;
+    message["type"] = "fetchOnlineUsers";
+    message["sender"] = "";
+    message["payload"] = "Request online users";
+
+    sendJsonMessage(message);
+    emit statusChanged("Online users request sent.");
 }
