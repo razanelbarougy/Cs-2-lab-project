@@ -13,6 +13,7 @@ public:
     NetworkClient(QObject *parent = nullptr);
 
     void connectToServer();
+    void sendSigninRequest( const QString &username) ;
     void sendLoginRequest(const QString &username);
     void sendTestMessage();
     void sendChatMessage(const QString &sender, const QString &text);

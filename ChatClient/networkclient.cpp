@@ -5,6 +5,7 @@
 NetworkClient::NetworkClient(QObject *parent)
     : QObject(parent), socket(new QTcpSocket(this))
 {
+
     connect(socket, &QTcpSocket::connected,this, &NetworkClient::onConnected);
 
     connect(socket, &QTcpSocket::errorOccurred,this, &NetworkClient::onErrorOccurred);
@@ -16,6 +17,23 @@ void NetworkClient::connectToServer()
 {
     emit statusChanged("Connecting to server...");
     socket->connectToHost("127.0.0.1", 54321);
+}
+
+void NetworkClient::sendSigninRequest( const QString &username)
+{
+    if (username.trimmed().isEmpty()) {
+        emit statusChanged("Username cannot be empty.");
+        return;
+    }
+
+
+    QJsonObject json;
+    json["type"] = "Signup";
+    json["sender"] = username;
+    json["payload"] = "Sign up request";
+
+    sendJsonMessage(json);
+    emit statusChanged("Sign up request sent.");
 }
 
 void NetworkClient::sendLoginRequest(const QString &username)
