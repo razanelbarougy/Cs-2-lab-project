@@ -121,6 +121,19 @@
     <string>Connect</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="logoutPushButton">
+   <property name="geometry">
+    <rect>
+     <x>320</x>
+     <y>530</y>
+     <width>100</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Log Out</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>
