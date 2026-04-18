@@ -40,7 +40,7 @@ void MainWindow::on_loginButton_clicked()
     }
 
     if(isLoggedIn) {
-        ui->statusLabel->setText("Already logged in. .");
+        ui->statusLabel->setText("Already logged in.");
         ui->statusLabel->adjustSize();
         return;
     }
@@ -74,15 +74,7 @@ void MainWindow::updateStatus(const QString &status)
 
 void MainWindow::on_sendButton_clicked()
 {
-    if (!isConnected) {
-        ui->statusLabel->setText("Connect to the server first.");
-        ui->statusLabel->adjustSize();
-        return;
-    }
-
-    if (!isLoggedIn) {
-        ui->statusLabel->setText("You must be logged in first");
-        ui->statusLabel->adjustSize();
+    if(!canSendMessages()) {
         return;
     }
 
@@ -105,5 +97,65 @@ void MainWindow::on_sendButton_clicked()
 
     ui->chatTextEdit->append(username + ": " + message);
     ui->messageLineEdit->clear();
+}
+
+bool MainWindow::canSendMessages()
+{
+    if (!isConnected) {
+        ui->statusLabel->setText("Connect to the server first.");
+        ui->statusLabel->adjustSize();
+        return false;
+    }
+
+    if (!isLoggedIn) {
+        ui->statusLabel->setText("You must log in first.");
+        ui->statusLabel->adjustSize();
+        return false;
+    }
+
+    return true;
+}
+void MainWindow::on_privateSendButton_clicked()
+
+{
+
+    if (!canSendMessages()) {
+        return;
+    }
+
+
+
+    QString username = ui->usernameLineEdit->text();
+    QString receiver = ui->recipientLineEdit->text();
+    QString message = ui->messageLineEdit->text();
+
+
+
+    if (receiver.trimmed().isEmpty()) {
+
+        ui->statusLabel->setText("Enter a recipient.");
+        ui->statusLabel->adjustSize();
+        return;
+
+    }
+
+
+
+    if (message.trimmed().isEmpty()) {
+
+        ui->statusLabel->setText("Enter a message first.");
+        ui->statusLabel->adjustSize();
+        return;
+
+    }
+
+
+
+    client->sendPrivateMessage(username, receiver, message);
+
+    ui->chatTextEdit->append("[Private to " + receiver + "] " + username + ": " + message);
+
+    ui->messageLineEdit->clear();
+
 }
 

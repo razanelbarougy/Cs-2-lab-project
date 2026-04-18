@@ -15,7 +15,8 @@ public:
     void connectToServer();
     void sendLoginRequest(const QString &username);
     void sendTestMessage();
-    void sendChatMessage(const QString& sender, const QString &text);
+    void sendChatMessage(const QString &sender, const QString &text);
+    void sendPrivateMessage(const QString &sender, const QString &reciever, const QString &text);
 
 signals:
     void statusChanged(const QString &status);
