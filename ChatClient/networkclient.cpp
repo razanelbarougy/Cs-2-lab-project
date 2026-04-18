@@ -93,3 +93,32 @@ void NetworkClient::sendChatMessage(const QString &sender, const QString &text)
     sendJsonMessage(message);
     emit statusChanged("Message sent.");
 }
+void NetworkClient::sendPrivateMessage(const QString &sender, const QString &receiver, const QString &text)
+{
+    if (sender.trimmed().isEmpty()) {
+        emit statusChanged("Username cannot be empty.");
+        return;
+    }
+
+    if (receiver.trimmed().isEmpty()) {
+        emit statusChanged("Recipient cannot be empty.");
+        return;
+    }
+
+    if (text.trimmed().isEmpty()) {
+        emit statusChanged("Message cannot be empty.");
+        return;
+    }
+
+    QJsonObject payload;
+    payload["receiver"] = receiver;
+    payload["text"] = text;
+
+    QJsonObject message;
+    message["type"] = "privateMessage";
+    message["sender"] = sender;
+    message["payload"] = payload;
+
+    sendJsonMessage(message);
+    emit statusChanged("Private message sent.");
+}
