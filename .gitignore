@@ -1,0 +1,42 @@
+# =========================
+# Build Directories
+# =========================
+build/
+build-*/
+out/
+bin/
+release/
+debug/
+
+# =========================
+# Qt & Qt Creator Specific
+# =========================
+*.user
+*.user.*
+.qmake.stash
+.qmake.cache
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+Makefile*
+
+# =========================
+# CMake Specific
+# =========================
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CMakeLists.txt.user
+
+# =========================
+# Compiled Binaries & OS Files
+# =========================
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.app
+.DS_Store
+Thumbs.db
