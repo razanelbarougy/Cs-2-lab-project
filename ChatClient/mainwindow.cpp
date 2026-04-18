@@ -10,15 +10,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     isLoggedin = false ;
     isSignedin = false ;
-    isConnected = false ;
 
-    connect(client, &NetworkClient::statusChanged,this, &MainWindow::updateStatus);
-
-    connect(client, &NetworkClient::messageReceived, this, [this](const QString &message) {
-            ui->chatTextEdit->append("Received: " + message);
-            });
-
-    connect(client, &NetworkClient::onlineUsersReceived, this, &MainWindow::updateOnlineUsers);
 }
 
 
@@ -67,18 +59,4 @@ void MainWindow::on_mw_login_pushButton_clicked()
 }
 
 
-void MainWindow::on_fetchUsersButton_clicked()
-{
-    if(!canSendMessages()) {
-        return;
-    }
-
-    client->fetchOnlineUsers();
-
-}
-void MainWindow::updateOnlineUsers(const QStringList &users)
-{
-    ui->onlineUsersListWidget->clear();
-    ui->onlineUsersListWidget->addItems(users);
-}
 
