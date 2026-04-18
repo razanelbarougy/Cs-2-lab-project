@@ -1,6 +1,16 @@
 # Prerequisites
 *.d
 
+# Build folders
+build/
+cmake-build-*/
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+Makefile
+
+
 # Compiled Object files
 *.slo
 *.lo
@@ -39,3 +49,11 @@
 
 # debug information files
 *.dwo
+
+# Qt
+*.pro.user
+
+# macOS
+.DS_Store
+
+Thumbs.db
