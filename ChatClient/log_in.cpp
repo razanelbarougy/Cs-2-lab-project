@@ -47,20 +47,24 @@ void Log_in::on_loginButton_clicked()
         return;
     }
 
-    QString username = ui->lg_sign_up_usernameLineEdit->text();
 
-    if (username.trimmed().isEmpty()) {
+    QString username = ui->lg_sign_up_usernameLineEdit->text().trimmed();
+    QString password = ui->lg_sign_up_passwordLineEdit->text().trimmed();
+
+    if (username.isEmpty()) {
         ui->statusLabel->setText("Enter a username first.");
         ui->statusLabel->adjustSize();
         return;
     }
 
-    client->sendLoginRequest(username);
-    isLoggedIn = true;
+    if (password.isEmpty()) {
+        ui->statusLabel->setText("Enter a password first.");
+        ui->statusLabel->adjustSize();
+        return;
+    }
 
-    chatWindow = new chatBox(client,username, this) ;
-    this -> hide() ;
-    chatWindow -> open() ;
+    client->sendLoginRequest(username, password);
+
 }
 
 void Log_in::updateStatus(const QString &status)

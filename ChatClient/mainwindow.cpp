@@ -43,7 +43,7 @@ void MainWindow::on_signupButton_clicked()
     user = username ;
     isSignedin = true ;
 
-    client->sendSigninRequest(user) ;
+    client->sendSigninRequest(user,password) ;
 
     chatWindow = new chatBox(client,user,this) ;
     this->hide() ;

@@ -19,9 +19,14 @@ void NetworkClient::connectToServer()
     socket->connectToHost("127.0.0.1", 54321);
 }
 
-void NetworkClient::sendSigninRequest( const QString &username)
+void NetworkClient::sendSigninRequest( const QString &username, const QString &password )
 {
     if (username.trimmed().isEmpty()) {
+        emit statusChanged("Username cannot be empty.");
+        return;
+    }
+
+    if (password.trimmed().isEmpty()) {
         emit statusChanged("Username cannot be empty.");
         return;
     }
@@ -36,18 +41,22 @@ void NetworkClient::sendSigninRequest( const QString &username)
     emit statusChanged("Sign up request sent.");
 }
 
-void NetworkClient::sendLoginRequest(const QString &username)
+void NetworkClient::sendLoginRequest(const QString &username, const QString &password)
 {
     if (username.trimmed().isEmpty()) {
         emit statusChanged("Username cannot be empty.");
         return;
     }
 
+    if (password.trimmed().isEmpty()) {
+        emit statusChanged("Password cannot be empty.");
+        return;
+    }
 
     QJsonObject json;
     json["type"] = "login";
-    json["sender"] = username;
-    json["payload"] = "Login request";
+    json["username"] = username;
+    json["password"] = password;
 
     sendJsonMessage(json);
     emit statusChanged("Login request sent.");
