@@ -24,6 +24,8 @@ private slots:
     void updateStatus(const QString &status);
     void on_sendButton_clicked();
     void on_privateSendButton_clicked();
+    void on_fetchUsersButton_clicked();
+    void updateOnlineUsers(const QStringList &users);
 
 private:
     Ui::MainWindow *ui;
