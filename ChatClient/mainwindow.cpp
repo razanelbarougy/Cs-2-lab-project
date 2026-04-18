@@ -15,6 +15,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(client, &NetworkClient::messageReceived, this, [this](const QString &message) {
             ui->chatTextEdit->append("Received: " + message);
             });
+
+    connect(client, &NetworkClient::onlineUsersReceived, this, &MainWindow::updateOnlineUsers);
 }
 
 MainWindow::~MainWindow()
@@ -160,5 +162,21 @@ void MainWindow::on_privateSendButton_clicked()
 
     ui->messageLineEdit->clear();
 
+}
+
+
+void MainWindow::on_fetchUsersButton_clicked()
+{
+    if(!canSendMessages()) {
+        return;
+    }
+
+    client->fetchOnlineUsers();
+
+}
+void MainWindow::updateOnlineUsers(const QStringList &users)
+{
+    ui->onlineUsersListWidget->clear();
+    ui->onlineUsersListWidget->addItems(users);
 }
 
