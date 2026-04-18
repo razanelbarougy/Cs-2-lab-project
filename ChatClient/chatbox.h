@@ -30,8 +30,6 @@ private slots:
     void on_privateSendButton_clicked();
     void on_connectButton_clicked();
     void updateStatus(const QString &status);
-    void on_fetchUsersButton_clicked();
-    void updateOnlineUsers(const QStringList &users);
 };
 
 #endif // CHATBOX_H

@@ -19,9 +19,6 @@ chatBox::chatBox(NetworkClient *client, const QString &username, QWidget *parent
     connect(client, &NetworkClient::messageReceived, this, [this](const QString &message) {
         ui->chatTextEdit->append("Received: " + message);
     });
-
-
-    connect(client, &NetworkClient::onlineUsersReceived, this, &chatBox::updateOnlineUsers);
 }
 
 
@@ -94,6 +91,7 @@ void chatBox::on_privateSendButton_clicked()
         return;
     }
 
+
     QString username = user ;
     QString receiver = ui->recipientLineEdit->text();
     QString message = ui->messageLineEdit->text();
@@ -107,6 +105,8 @@ void chatBox::on_privateSendButton_clicked()
 
     }
 
+
+
     if (message.trimmed().isEmpty()) {
 
         ui->statusLabel->setText("Enter a message first.");
@@ -114,6 +114,8 @@ void chatBox::on_privateSendButton_clicked()
         return;
 
     }
+
+
 
     client->sendPrivateMessage(username, receiver, message);
 
@@ -139,19 +141,4 @@ bool chatBox::canSendMessages()
     }
 
     return true;
-}
-
-void chatBox::on_fetchUsersButton_clicked()
-{
-    if(!canSendMessages()) {
-        return;
-    }
-
-    client->fetchOnlineUsers();
-}
-
-void chatBox::updateOnlineUsers(const QStringList &users)
-{
-    ui->onlineUsersListWidget->clear();
-    ui->onlineUsersListWidget->addItems(users);
 }
