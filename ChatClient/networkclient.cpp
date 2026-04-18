@@ -24,22 +24,14 @@ void NetworkClient::sendLoginRequest(const QString &username)
         return;
     }
 
-    if (socket->state() != QAbstractSocket::ConnectedState) {
-        emit statusChanged("Not connected to server.");
-        return;
-    }
 
     QJsonObject json;
     json["type"] = "login";
     json["sender"] = username;
     json["payload"] = "Login request";
 
-    QJsonDocument doc(json);
-    QByteArray data = doc.toJson(QJsonDocument::Compact);
-    data.append('\n');
-
-    socket->write(data);
-    emit statusChanged("Login JSON sent.");
+    sendJsonMessage(json);
+    emit statusChanged("Login request sent.");
 }
 
 void NetworkClient::onConnected()
@@ -51,4 +43,53 @@ void NetworkClient::onErrorOccurred(QAbstractSocket::SocketError socketError)
 {
     Q_UNUSED(socketError);
     emit statusChanged("Connection failed: " + socket->errorString());
+}
+
+void NetworkClient::sendJsonMessage(const QJsonObject &message)
+{
+    if (socket->state() != QAbstractSocket::ConnectedState) {
+        emit statusChanged("Not connected to server.");
+        return;
+    }
+
+    QJsonDocument doc(message);
+    QByteArray data = doc.toJson(QJsonDocument::Compact);
+    data.append('\n');
+
+    socket->write(data);
+}
+void NetworkClient::sendTestMessage()
+{
+    QJsonObject payload;
+    payload["text"] = "Hello from client";
+
+    QJsonObject message;
+    message["type"] = "sendMessage";
+    message["sender"] = "Sandra";
+    message["payload"] = payload;
+
+    sendJsonMessage(message);
+}
+void NetworkClient::sendChatMessage(const QString &sender, const QString &text)
+{
+    if (sender.trimmed().isEmpty()) {
+        emit statusChanged("Username cannot be empty.");
+        return;
+    }
+
+    if (text.trimmed().isEmpty()) {
+        emit statusChanged("Message cannot be empty.");
+        return;
+    }
+
+    QJsonObject payload;
+    payload["text"] = text;
+
+    QJsonObject message;
+    message["type"] = "sendMessage";
+    message["sender"] = sender;
+    message["payload"] = payload;
+
+    sendJsonMessage(message);
+    emit statusChanged("Message sent.");
 }

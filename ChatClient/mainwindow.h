@@ -22,10 +22,13 @@ private slots:
     void on_connectButton_clicked();
     void on_loginButton_clicked();
     void updateStatus(const QString &status);
+    void on_sendButton_clicked();
 
 private:
     Ui::MainWindow *ui;
     NetworkClient *client;
+    bool isLoggedIn;
+    bool isConnected;
 };
 
 #endif // MAINWINDOW_H

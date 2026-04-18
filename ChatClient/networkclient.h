@@ -14,6 +14,8 @@ public:
 
     void connectToServer();
     void sendLoginRequest(const QString &username);
+    void sendTestMessage();
+    void sendChatMessage(const QString& sender, const QString &text);
 
 signals:
     void statusChanged(const QString &status);
@@ -23,6 +25,7 @@ private slots:
     void onErrorOccurred(QAbstractSocket::SocketError socketError);
 
 private:
+    void sendJsonMessage(const QJsonObject &message);
     QTcpSocket *socket;
 };
 
