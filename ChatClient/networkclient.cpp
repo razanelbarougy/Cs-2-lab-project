@@ -1,14 +1,15 @@
 #include "networkclient.h"
 #include <QJsonDocument>
+#include <QJsonObject>
 
 NetworkClient::NetworkClient(QObject *parent)
     : QObject(parent), socket(new QTcpSocket(this))
 {
-    connect(socket, &QTcpSocket::connected,
-            this, &NetworkClient::onConnected);
+    connect(socket, &QTcpSocket::connected,this, &NetworkClient::onConnected);
 
-    connect(socket, &QTcpSocket::errorOccurred,
-            this, &NetworkClient::onErrorOccurred);
+    connect(socket, &QTcpSocket::errorOccurred,this, &NetworkClient::onErrorOccurred);
+
+    connect(socket, &QTcpSocket::readyRead, this, &NetworkClient::onReadyRead);
 }
 
 void NetworkClient::connectToServer()
@@ -121,4 +122,30 @@ void NetworkClient::sendPrivateMessage(const QString &sender, const QString &rec
 
     sendJsonMessage(message);
     emit statusChanged("Private message sent.");
+}
+void NetworkClient::onReadyRead()
+{
+    QByteArray data = socket->readAll();
+
+    QJsonDocument doc = QJsonDocument::fromJson(data);
+    if (!doc.isObject()) return;
+
+    QJsonObject obj = doc.object();
+
+    QString type = obj["type"].toString();
+    QString sender = obj["sender"].toString();
+
+    if (type == "sendMessage") {
+        QJsonObject payload = obj["payload"].toObject();
+        QString text = payload["text"].toString();
+
+        emit messageReceived(sender + ": " + text);
+    }
+    else if (type == "privateMessage") {
+        QJsonObject payload = obj["payload"].toObject();
+        QString text = payload["text"].toString();
+        QString receiver = payload["receiver"].toString();
+
+        emit messageReceived("[Private] " + sender + ": " + text);
+    }
 }

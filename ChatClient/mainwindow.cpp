@@ -10,8 +10,11 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    connect(client, &NetworkClient::statusChanged,
-            this, &MainWindow::updateStatus);
+    connect(client, &NetworkClient::statusChanged,this, &MainWindow::updateStatus);
+
+    connect(client, &NetworkClient::messageReceived, this, [this](const QString &message) {
+            ui->chatTextEdit->append("Received: " + message);
+            });
 }
 
 MainWindow::~MainWindow()
