@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>736</height>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,9 @@
    <widget class="QLabel" name="sign_up_usernameLabel">
     <property name="geometry">
      <rect>
-      <x>270</x>
+      <x>280</x>
+      <y>30</y>
+      <x>530</x>
       <y>40</y>
       <width>71</width>
       <height>16</height>
@@ -30,7 +32,9 @@
    <widget class="QLineEdit" name="sign_up_usernameLineEdit">
     <property name="geometry">
      <rect>
-      <x>380</x>
+      <x>440</x>
+      <y>30</y>
+      <x>640</x>
       <y>40</y>
       <width>113</width>
       <height>21</height>
@@ -40,8 +44,10 @@
    <widget class="QPushButton" name="signupButton">
     <property name="geometry">
      <rect>
-      <x>390</x>
-      <y>140</y>
+      <x>450</x>
+      <y>90</y>
+      <x>520</x>
+      <y>80</y>
       <width>100</width>
       <height>32</height>
      </rect>
@@ -53,22 +59,86 @@
    <widget class="QLineEdit" name="sign_up_passwordLineEdit">
     <property name="geometry">
      <rect>
-      <x>379</x>
-      <y>81</y>
-      <width>111</width>
+      <x>440</x>
+      <y>60</y>
+      <width>113</width>
       <height>21</height>
+      <x>650</x>
+      <y>80</y>
+      <width>100</width>
+      <height>32</height>
      </rect>
     </property>
     <property name="text">
-     <string/>
+     <string>Login</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="statusLabel">
+    <property name="geometry">
+     <rect>
+      <x>590</x>
+      <y>130</y>
+      <width>121</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Status: Not connected</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="messageLineEdit">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>530</y>
+      <width>211</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="sendButton">
+    <property name="geometry">
+     <rect>
+      <x>500</x>
+      <y>530</y>
+      <width>201</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>send message</string>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="chatTextEdit">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>280</y>
+      <width>631</width>
+      <height>211</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="recipientLineEdit">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>500</y>
+      <width>211</width>
+      <height>22</height>
+     </rect>
     </property>
    </widget>
    <widget class="QLabel" name="sign_up_passwordLabel">
     <property name="geometry">
      <rect>
-      <x>270</x>
-      <y>70</y>
-      <width>81</width>
+      <x>280</x>
+      <y>60</y>
+      <width>71</width>
+      <height>16</height>
+      <x>500</x>
+      <y>500</y>
+      <width>201</width>
       <height>24</height>
      </rect>
     </property>
@@ -79,9 +149,13 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>250</x>
+      <x>300</x>
       <y>220</y>
       <width>131</width>
+      <height>16</height>
+      <x>30</x>
+      <y>530</y>
+      <width>91</width>
       <height>20</height>
      </rect>
     </property>
@@ -92,14 +166,54 @@
    <widget class="QPushButton" name="mw_login_pushButton">
     <property name="geometry">
      <rect>
-      <x>380</x>
+      <x>450</x>
       <y>210</y>
+      <width>100</width>
+      <height>32</height>
+      <x>30</x>
+      <y>500</y>
       <width>81</width>
-      <height>31</height>
+      <height>16</height>
      </rect>
     </property>
     <property name="text">
      <string>Log in</string>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="onlineUsersListWidget">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>30</y>
+      <width>191</width>
+      <height>201</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="fetchUsersButton">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>240</y>
+      <width>151</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Fetch Online Users</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="onlineUserslabel">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>10</y>
+      <width>81</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Online Users:</string>
     </property>
    </widget>
   </widget>
