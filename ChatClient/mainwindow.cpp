@@ -31,4 +31,5 @@ void MainWindow::on_loginButton_clicked()
 void MainWindow::updateStatus(const QString &status)
 {
     ui->statusLabel->setText(status);
+    ui->statusLabel->adjustSize();
 }
