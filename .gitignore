@@ -1,59 +1,42 @@
-# Prerequisites
-*.d
-
-# Build folders
+# =========================
+# Build Directories
+# =========================
 build/
-cmake-build-*/
+build-*/
+out/
+bin/
+release/
+debug/
 
-# CMake
-CMakeFiles/
+# =========================
+# Qt & Qt Creator Specific
+# =========================
+*.user
+*.user.*
+.qmake.stash
+.qmake.cache
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+Makefile*
+
+# =========================
+# CMake Specific
+# =========================
 CMakeCache.txt
-Makefile
+CMakeFiles/
+cmake_install.cmake
+CMakeLists.txt.user
 
-
-# Compiled Object files
-*.slo
-*.lo
+# =========================
+# Compiled Binaries & OS Files
+# =========================
 *.o
 *.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Linker files
-*.ilk
-
-# Debugger Files
-*.pdb
-
-# Compiled Dynamic libraries
+*.exe
+*.dll
 *.so
 *.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
 *.app
-
-# debug information files
-*.dwo
-
-# Qt
-*.pro.user
-
-# macOS
 .DS_Store
-
 Thumbs.db
