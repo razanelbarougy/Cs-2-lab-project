@@ -4,6 +4,7 @@
 #include <map>
 #include <memory>
 #include <boost/asio.hpp>
+#include <fstream>
 
 using boost::asio::ip::tcp;
 using boost::asio::awaitable;
@@ -50,6 +51,56 @@ return "";
 return message.substr(start, end - start);
 }
 
+bool userExists(const std::string& username) {
+    std::ifstream file("users.txt");
+    std::string line;
+
+    while (std::getline(file, line)) {
+        size_t comma = line.find(',');
+        if (comma != std::string::npos) {
+            std::string savedUser = line.substr(0, comma);
+            if (savedUser == username) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+bool validateUser(const std::string& username, const std::string& password) {
+    std::ifstream file("users.txt");
+    std::string line;
+
+    while (std::getline(file, line)) {
+        size_t comma = line.find(',');
+        if (comma != std::string::npos) {
+            std::string savedUser = line.substr(0, comma);
+            std::string savedPass = line.substr(comma + 1);
+
+            if (savedUser == username && savedPass == password) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+bool registerUser(const std::string& username, const std::string& password) {
+    if (userExists(username)) {
+        return false;
+    }
+
+    std::ofstream file("users.txt", std::ios::app);
+    if (!file.is_open()) {
+        return false;
+    }
+
+    file << username << "," << password << "\n";
+    return true;
+}
+
 // Coroutine to handle an individual client's connection
 awaitable<void> handle_client(std::shared_ptr<tcp::socket> socket) {
 char data[1024];
@@ -71,10 +122,32 @@ std::string type = extractField(message, "type");
 std::string sender = extractField(message, "sender");
 
 if (type == "login") {
-connectedUsers[sender] = socket;
-currentUser = sender;
-std::cout << sender << " logged in.\n";
+        std::string username = extractField(message, "username");
+        std::string password = extractField(message, "password");
+
+        std::string reply;
+
+        if (validateUser(username, password)) {
+            connectedUsers[username] = socket;
+            currentUser = username;
+
+            reply = R"({"type":"loginResult","status":"success","message":"Login successful."})";
+            std::cout << username << " logged in.\n";
+        } else {
+            reply = R"({"type":"loginResult","status":"error","message":"Invalid username or password."})";
+            std::cout << "Failed login attempt for user: " << username << "\n";
+        }
+
+        reply += "\n";
+
+        co_await boost::asio::async_write(
+            *socket,
+            boost::asio::buffer(reply),
+            use_awaitable
+        );
 }
+    
+    
 else if (type == "sendMessage") {
 for (auto& pair : connectedUsers) {
 const std::string& username = pair.first;
