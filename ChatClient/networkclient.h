@@ -20,10 +20,12 @@ public:
 
 signals:
     void statusChanged(const QString &status);
+    void messageReceived(const QString &message);
 
 private slots:
     void onConnected();
     void onErrorOccurred(QAbstractSocket::SocketError socketError);
+    void onReadyRead();
 
 private:
     void sendJsonMessage(const QJsonObject &message);
