@@ -17,8 +17,8 @@
    <widget class="QLabel" name="usernameLabel">
     <property name="geometry">
      <rect>
-      <x>300</x>
-      <y>130</y>
+      <x>280</x>
+      <y>50</y>
       <width>71</width>
       <height>16</height>
      </rect>
@@ -30,8 +30,8 @@
    <widget class="QLineEdit" name="usernameLineEdit">
     <property name="geometry">
      <rect>
-      <x>420</x>
-      <y>130</y>
+      <x>440</x>
+      <y>50</y>
       <width>113</width>
       <height>21</height>
      </rect>
@@ -40,8 +40,8 @@
    <widget class="QPushButton" name="connectButton">
     <property name="geometry">
      <rect>
-      <x>270</x>
-      <y>180</y>
+      <x>260</x>
+      <y>100</y>
       <width>100</width>
       <height>32</height>
      </rect>
@@ -53,8 +53,8 @@
    <widget class="QPushButton" name="loginButton">
     <property name="geometry">
      <rect>
-      <x>450</x>
-      <y>180</y>
+      <x>440</x>
+      <y>100</y>
       <width>100</width>
       <height>32</height>
      </rect>
@@ -67,13 +67,46 @@
     <property name="geometry">
      <rect>
       <x>340</x>
-      <y>240</y>
+      <y>150</y>
       <width>121</width>
       <height>20</height>
      </rect>
     </property>
     <property name="text">
      <string>Status: Not connected</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="messageLineEdit">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>480</y>
+      <width>211</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="sendButton">
+    <property name="geometry">
+     <rect>
+      <x>500</x>
+      <y>480</y>
+      <width>201</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>send message</string>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="chatTextEdit">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>180</y>
+      <width>631</width>
+      <height>271</height>
+     </rect>
     </property>
    </widget>
   </widget>
