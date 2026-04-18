@@ -24,21 +24,12 @@ public:
 private slots:
 
     void on_signupButton_clicked();
-
     void on_mw_login_pushButton_clicked();
-    void on_connectButton_clicked();
-    void on_loginButton_clicked();
-    void updateStatus(const QString &status);
-    void on_sendButton_clicked();
-    void on_privateSendButton_clicked();
-    void on_fetchUsersButton_clicked();
-    void updateOnlineUsers(const QStringList &users);
 
 private:
     Ui::MainWindow *ui;
     bool isLoggedin ;
     bool isSignedin ;
-    bool isConnected ;
 
     NetworkClient *client;
     Log_in *loginWindow;
