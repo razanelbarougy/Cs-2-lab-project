@@ -146,7 +146,46 @@ if (type == "login") {
             use_awaitable
         );
 }
-    
+
+    else if(type == "signup")
+    {
+            std::string username = extractField(message, "username");
+            std::string password = extractField(message, "password");
+
+            std::string reply;
+
+            if (registerUser(username, password)) {
+                
+                connectedUsers[username] = socket;
+                currentUser = username;
+                
+                reply = R"({"type":"signupResult","status":"success","message":"Signup successful."})";
+                std::cout << username << " registered successfully.\n";
+            } else {
+                reply = R"({"type":"signupResult","status":"error","message":"Username already exists."})";
+                std::cout << "Signup failed. Username already exists: " << username << "\n";
+            }
+
+            reply += "\n";
+
+            co_await boost::asio::async_write(
+                *socket,
+                boost::asio::buffer(reply),
+                use_awaitable
+            );
+    }
+    else if(type == "logout")
+    {
+        std::string username = extractField(message, "username");
+        if (!username.empty())
+        {
+            connectedUsers.erase(username);
+            std::cout << username << " logged out.\n";
+        }
+        std::string reply = R"({"type":"logoutResult","status":"success","message":"Logged out."})";
+        reply += "\n";
+        co_await boost::asio::async_write(*socket,boost::asio::buffer(reply),use_awaitable);
+    }
     
 else if (type == "sendMessage") {
 for (auto& pair : connectedUsers) {

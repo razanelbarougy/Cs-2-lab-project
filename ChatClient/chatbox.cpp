@@ -1,16 +1,14 @@
 #include "chatbox.h"
+#include "mainwindow.h"
 #include "ui_chatbox.h"
-#include <QDebug>
 
 chatBox::chatBox(NetworkClient *client, const QString &username, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::chatBox)
     , isLoggedIn(true)
-    , isConnected(false)
     , client(client)
     , user(username)
 {
-    qDebug() << "chatBox opened, client =" << client;
 
     ui->setupUi(this);
 
@@ -21,6 +19,8 @@ chatBox::chatBox(NetworkClient *client, const QString &username, QWidget *parent
     });
 
     connect(client, &NetworkClient::onlineUsersReceived, this, &chatBox::updateOnlineUsers);
+
+    setAttribute(Qt::WA_DeleteOnClose);
 }
 
 
@@ -30,9 +30,7 @@ chatBox::~chatBox()
 }
 void chatBox::on_connectButton_clicked()
 {
-    qDebug() << "connect pressed, client =" << client;
-
-    if (isConnected) {
+    if (client->isConnected()==true) {
         ui->statusLabel->setText("Already connected.");
         ui->statusLabel->adjustSize();
         return;
@@ -42,17 +40,11 @@ void chatBox::on_connectButton_clicked()
 }
 void chatBox::updateStatus(const QString &status)
 {
-    qDebug() << "status =" << status;
 
     ui->statusLabel->setText(status);
     ui->statusLabel->adjustSize();
 
-    if (status == "Connected successfully.") {
-        isConnected = true;
-    }
-
     if (status.startsWith("Connection failed")) {
-        isConnected = false;
         isLoggedIn = false;
     }
 }
@@ -130,7 +122,7 @@ void chatBox::on_privateSendButton_clicked()
 
 bool chatBox::canSendMessages()
 {
-    if (!isConnected) {
+    if (!client->isConnected()) {
         ui->statusLabel->setText("Connect to the server first.");
         ui->statusLabel->adjustSize();
         return false;
@@ -158,3 +150,13 @@ void chatBox::updateOnlineUsers(const QStringList &users)
     ui->onlineUsersListWidget->clear();
     ui->onlineUsersListWidget->addItems(users);
 }
+
+void chatBox::on_logoutPushButton_clicked()
+{
+    client ->sendLogoutRequest(user) ;
+    MainWindow *MW = new MainWindow(client, nullptr);
+    MW->show();
+
+    this->close();
+}
+

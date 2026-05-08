@@ -19,7 +19,6 @@ public:
 private:
     Ui::chatBox *ui;
     bool isLoggedIn;
-    bool isConnected;
     bool canSendMessages();
     NetworkClient *client;
 
@@ -32,6 +31,7 @@ private slots:
     void updateStatus(const QString &status);
     void on_fetchUsersButton_clicked();
     void updateOnlineUsers(const QStringList &users);
+    void on_logoutPushButton_clicked();
 };
 
 #endif // CHATBOX_H

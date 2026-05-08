@@ -16,8 +16,23 @@ NetworkClient::NetworkClient(QObject *parent)
 
 void NetworkClient::connectToServer()
 {
+    if (socket->state() == QAbstractSocket::ConnectedState) {
+        qDebug() << "Already connected to server.";
+        return;
+    }
+
+    if (socket->state() == QAbstractSocket::ConnectingState) {
+        qDebug() << "Connection already in progress.";
+        return;
+    }
+
     emit statusChanged("Connecting to server...");
     socket->connectToHost("127.0.0.1", 54321);
+}
+
+bool NetworkClient::isConnected() const
+{
+    return socket->state()== QAbstractSocket::ConnectedState ;
 }
 
 void NetworkClient::sendSigninRequest( const QString &username, const QString &password )
@@ -34,11 +49,14 @@ void NetworkClient::sendSigninRequest( const QString &username, const QString &p
 
 
     QJsonObject json;
-    json["type"] = "Signup";
-    json["sender"] = username;
-    json["payload"] = "Sign up request";
+    json["type"] = "signup";
+    json["username"] = username;
+    json["password"] = password ;
 
-    sendJsonMessage(json);
+    QJsonDocument doc(json);
+    socket->write(doc.toJson(QJsonDocument::Compact));
+    socket->write("\n");
+
     emit statusChanged("Sign up request sent.");
 }
 
@@ -164,6 +182,32 @@ void NetworkClient::onReadyRead()
 
     QString type = obj["type"].toString();
     QString sender = obj["sender"].toString();
+    QString status = obj["status"].toString() ;
+    QString message = obj["message"].toString() ;
+
+    if (type == "signupResult")
+    {
+        if(status == "success")
+        {
+            emit signupResult(true,message) ;
+        }
+        else
+        {
+            emit signupResult(false,message) ;
+        }
+    }
+
+    if(type== "loginResult")
+    {
+        if(status=="success")
+        {
+            emit loginResult(true,message) ;
+        }
+        else
+        {
+            emit loginResult(false,message) ;
+        }
+    }
 
     if (type == "sendMessage") {
         QJsonObject payload = obj["payload"].toObject();
@@ -199,4 +243,15 @@ void NetworkClient::fetchOnlineUsers()
 
     sendJsonMessage(message);
     emit statusChanged("Online users request sent.");
+}
+
+void NetworkClient::sendLogoutRequest(const QString& username)
+{
+    QJsonObject object;
+    object["type"] = "logout";
+    object["username"] = username;;
+
+    QJsonDocument doc(object);
+    socket->write(doc.toJson(QJsonDocument::Compact));
+    socket->write("\n");
 }

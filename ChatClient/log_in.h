@@ -4,6 +4,7 @@
 #include "chatbox.h"
 #include "networkclient.h"
 #include <QDialog>
+using namespace std;
 
 namespace Ui {
 class Log_in;
@@ -19,7 +20,6 @@ public:
 
 private:
     Ui::Log_in *ui;
-    bool isConnected;
     NetworkClient *client;
     bool isLoggedIn;
     chatBox *chatWindow;
@@ -27,9 +27,12 @@ private:
     QString username ;
 
 private slots:
-    void on_loginButton_clicked();
     void on_connectButton_clicked();
     void updateStatus(const QString &status);
+    void on_lg_loginPushButton_clicked();
+    void handleServerResponse(bool success) ;
 };
+
+bool uExists(string username) ;
 
 #endif // LOG_IN_H
