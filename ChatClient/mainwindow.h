@@ -7,6 +7,8 @@
 #include <QMainWindow>
 #include <QtNetwork/qtcpsocket.h>
 
+using namespace std;
+
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -18,7 +20,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(NetworkClient *client, QWidget *parent = nullptr);
     ~MainWindow() override;
 
 private slots:
@@ -26,12 +28,12 @@ private slots:
     void on_signupButton_clicked();
 
     void on_mw_login_pushButton_clicked();
+    void handleSResponse(bool success , QString Message) ;
 
 private:
     Ui::MainWindow *ui;
     bool isLoggedin ;
     bool isSignedin ;
-    bool isConnected ;
 
     NetworkClient *client;
     Log_in *loginWindow;
@@ -40,5 +42,7 @@ private:
     QString user ;
 
 };
+
+bool userExists(string username) ;
 
 #endif // MAINWINDOW_H

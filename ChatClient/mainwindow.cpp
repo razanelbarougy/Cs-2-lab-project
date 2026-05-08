@@ -1,17 +1,21 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include<fstream>
 #include <QMessageBox>
 
-MainWindow::MainWindow(QWidget *parent)
+using namespace std;
+
+MainWindow::MainWindow(NetworkClient *client, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    , client(new NetworkClient(this))
+    , client(client)
 {
     ui->setupUi(this);
     isLoggedin = false ;
     isSignedin = false ;
-    isConnected = false ;
 
+    connect(client, &NetworkClient::signupResult, this, &MainWindow::handleSResponse);
+    setAttribute(Qt::WA_DeleteOnClose);
 }
 
 
@@ -20,7 +24,22 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+bool userExists(string username)
+{
+    QString projectDir = QCoreApplication::applicationDirPath().section("/build", 0, 0);
+    ifstream file((projectDir + "/users.txt").toStdString());
 
+    string storedUsername , storedPassword ;
+    while(file>>storedUsername>>storedPassword)
+    {
+        if(storedUsername==username)
+        {
+            return true ;
+        }
+    }
+
+    return false ;
+}
 
 void MainWindow::on_signupButton_clicked()
 {
@@ -41,14 +60,7 @@ void MainWindow::on_signupButton_clicked()
         return ;
     }
 
-    user = username ;
-    isSignedin = true ;
-
-    client->sendSigninRequest(user,password) ;
-
-    chatWindow = new chatBox(client,user,this) ;
-    this->hide() ;
-    chatWindow -> show() ;
+    client->sendSigninRequest(username,password) ;
 }
 
 
@@ -58,5 +70,39 @@ void MainWindow::on_mw_login_pushButton_clicked()
     l -> show() ;
     this->hide() ;
 }
+
+void MainWindow::handleSResponse(bool success, QString message)
+{
+    if(success)
+    {
+        QMessageBox::information(this, "Success", message);
+        QString usern = ui->sign_up_usernameLineEdit->text().trimmed() ;
+        chatWindow = new chatBox(client, usern, nullptr);
+        chatWindow->show();
+
+        this->close() ;
+    }
+    else
+    {
+        QMessageBox::critical(this, "Signup Failed", message);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

@@ -15,21 +15,24 @@ public:
     void connectToServer();
     void sendSigninRequest( const QString &username, const QString &password) ;
     void sendLoginRequest(const QString &username, const QString &password);
+    void sendLogoutRequest(const QString& username);
     void sendTestMessage();
     void sendChatMessage(const QString &sender, const QString &text);
     void sendPrivateMessage(const QString &sender, const QString &reciever, const QString &text);
     void fetchOnlineUsers();
+    bool isConnected() const;
 
 signals:
     void statusChanged(const QString &status);
     void messageReceived(const QString &message);
     void onlineUsersReceived(const QStringList &users);
+    void signupResult(bool success, QString message) ;
+    void loginResult(bool success, QString message) ;
 
 private slots:
     void onConnected();
     void onErrorOccurred(QAbstractSocket::SocketError socketError);
     void onReadyRead();
-
 private:
     void sendJsonMessage(const QJsonObject &message);
     QTcpSocket *socket;
