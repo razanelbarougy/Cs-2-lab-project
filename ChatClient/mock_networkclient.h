@@ -1,32 +1,126 @@
-#pragma once
-#include <QJsonObject>
+#ifndef MOCK_NETWORKCLIENT_H
+#define MOCK_NETWORKCLIENT_H
+
 #include <QObject>
 #include <QString>
 #include <QStringList>
-#include <gmock/gmock.h>
 
-// We define a minimal abstract interface so GoogleMock can mock it.
-// In production code, NetworkClient already has these methods – the mock
-// replaces the real TCP socket with fake in-process behaviour.
-
-class INetworkClient : public QObject {
+class MockNetworkClient : public QObject {
   Q_OBJECT
-public:
-  explicit INetworkClient(QObject *parent = nullptr) : QObject(parent) {}
-  virtual ~INetworkClient() = default;
 
-  virtual void connectToServer() = 0;
-  virtual bool isConnected() const = 0;
-  virtual void sendSigninRequest(const QString &username,
-                                 const QString &password) = 0;
-  virtual void sendLoginRequest(const QString &username,
-                                const QString &password) = 0;
-  virtual void sendLogoutRequest(const QString &username) = 0;
-  virtual void sendChatMessage(const QString &sender, const QString &text) = 0;
-  virtual void sendPrivateMessage(const QString &sender,
-                                  const QString &receiver,
-                                  const QString &text) = 0;
-  virtual void fetchOnlineUsers() = 0;
+public:
+  explicit MockNetworkClient(QObject *parent = nullptr)
+      : QObject(parent), m_connected(false) {}
+
+  void connectToServer() {
+    connectCallCount++;
+  }
+
+  bool isConnected() const {
+    return m_connected;
+  }
+
+  void setConnected(bool connected) {
+    m_connected = connected;
+  }
+
+  void sendSigninRequest(const QString &username,
+                         const QString &password) {
+    signinCallCount++;
+    lastSigninUsername = username;
+    lastSigninPassword = password;
+  }
+
+  void sendLoginRequest(const QString &username,
+                        const QString &password) {
+    loginCallCount++;
+    lastLoginUsername = username;
+    lastLoginPassword = password;
+  }
+
+  void sendLogoutRequest(const QString &username) {
+    logoutCallCount++;
+    lastLogoutUsername = username;
+  }
+
+  void sendChatMessage(const QString &sender, const QString &text) {
+    chatMessageCallCount++;
+    lastChatSender = sender;
+    lastChatText = text;
+  }
+
+  void sendPrivateMessage(const QString &sender,
+                          const QString &receiver,
+                          const QString &text) {
+    privateMessageCallCount++;
+    lastPrivateSender = sender;
+    lastPrivateReceiver = receiver;
+    lastPrivateText = text;
+  }
+
+  void fetchOnlineUsers() {
+    fetchOnlineUsersCallCount++;
+  }
+
+  void emitSignupResult(bool ok, const QString &msg) {
+    emit signupResult(ok, msg);
+  }
+
+  void emitLoginResult(bool ok, const QString &msg) {
+    emit loginResult(ok, msg);
+  }
+
+  void emitStatusChanged(const QString &s) {
+    emit statusChanged(s);
+  }
+
+  void emitMessageReceived(const QString &m) {
+    emit messageReceived(m);
+  }
+
+  void emitOnlineUsersReceived(const QStringList &users) {
+    emit onlineUsersReceived(users);
+  }
+
+  void reset() {
+    connectCallCount = 0;
+    signinCallCount = 0;
+    loginCallCount = 0;
+    logoutCallCount = 0;
+    chatMessageCallCount = 0;
+    privateMessageCallCount = 0;
+    fetchOnlineUsersCallCount = 0;
+    m_connected = false;
+    lastSigninUsername.clear();
+    lastSigninPassword.clear();
+    lastLoginUsername.clear();
+    lastLoginPassword.clear();
+    lastLogoutUsername.clear();
+    lastChatSender.clear();
+    lastChatText.clear();
+    lastPrivateSender.clear();
+    lastPrivateReceiver.clear();
+    lastPrivateText.clear();
+  }
+
+  int connectCallCount = 0;
+  int signinCallCount = 0;
+  int loginCallCount = 0;
+  int logoutCallCount = 0;
+  int chatMessageCallCount = 0;
+  int privateMessageCallCount = 0;
+  int fetchOnlineUsersCallCount = 0;
+
+  QString lastSigninUsername;
+  QString lastSigninPassword;
+  QString lastLoginUsername;
+  QString lastLoginPassword;
+  QString lastLogoutUsername;
+  QString lastChatSender;
+  QString lastChatText;
+  QString lastPrivateSender;
+  QString lastPrivateReceiver;
+  QString lastPrivateText;
 
 signals:
   void statusChanged(const QString &status);
@@ -34,37 +128,9 @@ signals:
   void onlineUsersReceived(const QStringList &users);
   void signupResult(bool success, QString message);
   void loginResult(bool success, QString message);
+
+private:
+  bool m_connected;
 };
 
-class MockNetworkClient : public INetworkClient {
-  Q_OBJECT
-public:
-  explicit MockNetworkClient(QObject *parent = nullptr)
-      : INetworkClient(parent) {}
-
-  MOCK_METHOD(void, connectToServer, (), (override));
-  MOCK_METHOD(bool, isConnected, (), (const, override));
-  MOCK_METHOD(void, sendSigninRequest, (const QString &, const QString &),
-              (override));
-  MOCK_METHOD(void, sendLoginRequest, (const QString &, const QString &),
-              (override));
-  MOCK_METHOD(void, sendLogoutRequest, (const QString &), (override));
-  MOCK_METHOD(void, sendChatMessage, (const QString &, const QString &),
-              (override));
-  MOCK_METHOD(void, sendPrivateMessage,
-              (const QString &, const QString &, const QString &), (override));
-  MOCK_METHOD(void, fetchOnlineUsers, (), (override));
-
-  // ── helpers that let tests fire Qt signals from the mock ──────────────
-  void emitSignupResult(bool ok, const QString &msg) {
-    emit signupResult(ok, msg);
-  }
-  void emitLoginResult(bool ok, const QString &msg) {
-    emit loginResult(ok, msg);
-  }
-  void emitStatusChanged(const QString &s) { emit statusChanged(s); }
-  void emitMessageReceived(const QString &m) { emit messageReceived(m); }
-  void emitOnlineUsersReceived(const QStringList &users) {
-    emit onlineUsersReceived(users);
-  }
-};
+#endif // MOCK_NETWORKCLIENT_H

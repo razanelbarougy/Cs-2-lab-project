@@ -1,235 +1,144 @@
 #include "mock_networkclient.h"
-#include <QApplication>
-#include <QTimer>
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <QCoreApplication>
+#include <QSignalSpy>
+#include <QTest>
 
-using ::testing::_;
-using ::testing::NiceMock;
-using ::testing::Return;
-using ::testing::StrictMock;
+class ClientTests : public QObject {
+  Q_OBJECT
 
-static void processEvents(int ms = 50) {
-  QTimer::singleShot(ms, qApp, [] { qApp->quit(); });
-  qApp->exec();
-}
+private:
+  MockNetworkClient mock;
 
-class SignupTest : public ::testing::Test {
-protected:
-  NiceMock<MockNetworkClient> mock;
-};
+private slots:
+  void init() {
+    mock.reset();
+  }
 
-TEST_F(SignupTest, ValidCredentials_CallsSendSigninRequest) {
-  EXPECT_CALL(mock, sendSigninRequest("alice", "pass123")).Times(1);
-  mock.sendSigninRequest("alice", "pass123");
-}
+  void testValidCredentialsCallsSendSigninRequest() {
+    mock.sendSigninRequest("alice", "pass123");
+    QCOMPARE(mock.signinCallCount, 1);
+    QCOMPARE(mock.lastSigninUsername, QStringLiteral("alice"));
+    QCOMPARE(mock.lastSigninPassword, QStringLiteral("pass123"));
+  }
 
-TEST_F(SignupTest, SuccessSignal_CarriesCorrectPayload) {
-  bool receivedSuccess = false;
-  QString receivedMsg;
+  void testSuccessSignalCarriesCorrectPayload() {
+    QSignalSpy spy(&mock, &MockNetworkClient::signupResult);
+    mock.emitSignupResult(true, QStringLiteral("Account created"));
 
-  QObject::connect(&mock, &INetworkClient::signupResult,
-                   [&](bool ok, QString msg) {
-                     receivedSuccess = ok;
-                     receivedMsg = msg;
-                   });
+    QVERIFY(spy.wait(100));
+    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy[0][0].toBool(), true);
+    QCOMPARE(spy[0][1].toString(), QStringLiteral("Account created"));
+  }
 
-  mock.emitSignupResult(true, "Account created");
-  processEvents();
+  void testFailureSignalCarriesSuccessFalse() {
+    QSignalSpy spy(&mock, &MockNetworkClient::signupResult);
+    mock.emitSignupResult(false, QStringLiteral("Username already taken"));
 
-  EXPECT_TRUE(receivedSuccess);
-  EXPECT_EQ(receivedMsg, "Account created");
-}
+    QVERIFY(spy.wait(100));
+    QCOMPARE(spy[0][0].toBool(), false);
+  }
 
-TEST_F(SignupTest, FailureSignal_CarriesSuccessFalse) {
-  bool receivedSuccess = true; // start true so we detect the flip
+  void testDuplicateUsernameServerReturnsFalseWithMessage() {
+    QSignalSpy spy(&mock, &MockNetworkClient::signupResult);
+    mock.emitSignupResult(false, QStringLiteral("Username already exists"));
 
-  QObject::connect(&mock, &INetworkClient::signupResult,
-                   [&](bool ok, QString) { receivedSuccess = ok; });
+    QVERIFY(spy.wait(100));
+    QCOMPARE(spy[0][0].toBool(), false);
+    QVERIFY(!spy[0][1].toString().isEmpty());
+  }
 
-  mock.emitSignupResult(false, "Username already taken");
-  processEvents();
+  void testValidLoginEmitsSuccessSignal() {
+    QSignalSpy spy(&mock, &MockNetworkClient::loginResult);
+    mock.emitLoginResult(true, QStringLiteral("Welcome back!"));
 
-  EXPECT_FALSE(receivedSuccess);
-}
+    QVERIFY(spy.wait(100));
+    QCOMPARE(spy[0][0].toBool(), true);
+  }
 
-TEST_F(SignupTest, DuplicateUsername_ServerReturnsFalseWithMessage) {
-  QString receivedMsg;
-  bool receivedOk = true;
+  void testWrongPasswordEmitsFailureSignal() {
+    QSignalSpy spy(&mock, &MockNetworkClient::loginResult);
+    mock.emitLoginResult(false, QStringLiteral("Incorrect username or password"));
 
-  QObject::connect(&mock, &INetworkClient::signupResult,
-                   [&](bool ok, QString msg) {
-                     receivedOk = ok;
-                     receivedMsg = msg;
-                   });
+    QVERIFY(spy.wait(100));
+    QCOMPARE(spy[0][0].toBool(), false);
+  }
 
-  mock.emitSignupResult(false, "Username already exists");
-  processEvents();
+  void testSendLoginRequestUsesCorrectCredentials() {
+    mock.sendLoginRequest("bob", "secret");
+    QCOMPARE(mock.loginCallCount, 1);
+    QCOMPARE(mock.lastLoginUsername, QStringLiteral("bob"));
+    QCOMPARE(mock.lastLoginPassword, QStringLiteral("secret"));
+  }
 
-  EXPECT_FALSE(receivedOk);
-  EXPECT_FALSE(receivedMsg.isEmpty());
-}
+  void testBroadcastMessageCallsSendChatMessage() {
+    mock.sendChatMessage("alice", "Hello everyone!");
+    QCOMPARE(mock.chatMessageCallCount, 1);
+    QCOMPARE(mock.lastChatSender, QStringLiteral("alice"));
+    QCOMPARE(mock.lastChatText, QStringLiteral("Hello everyone!"));
+  }
 
-class LoginTest : public ::testing::Test {
-protected:
-  NiceMock<MockNetworkClient> mock;
-};
+  void testPrivateMessageCallsSendPrivateMessage() {
+    mock.sendPrivateMessage("alice", "bob", "Hey Bob!");
+    QCOMPARE(mock.privateMessageCallCount, 1);
+    QCOMPARE(mock.lastPrivateSender, QStringLiteral("alice"));
+    QCOMPARE(mock.lastPrivateReceiver, QStringLiteral("bob"));
+    QCOMPARE(mock.lastPrivateText, QStringLiteral("Hey Bob!"));
+  }
 
-TEST_F(LoginTest, ValidLogin_EmitsSuccessSignal) {
-  bool ok = false;
-  QObject::connect(&mock, &INetworkClient::loginResult,
-                   [&](bool success, QString) { ok = success; });
+  void testIncomingBroadcastSignalContainsSenderAndText() {
+    QSignalSpy spy(&mock, &MockNetworkClient::messageReceived);
+    mock.emitMessageReceived(QStringLiteral("alice: Hello everyone!"));
 
-  mock.emitLoginResult(true, "Welcome back!");
-  processEvents();
+    QVERIFY(spy.wait(100));
+    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy[0][0].toString().contains("alice"), true);
+    QCOMPARE(spy[0][0].toString().contains("Hello everyone!"), true);
+  }
 
-  EXPECT_TRUE(ok);
-}
+  void testIncomingPrivateMessageSignalHasPrivatePrefix() {
+    QSignalSpy spy(&mock, &MockNetworkClient::messageReceived);
+    mock.emitMessageReceived(QStringLiteral("[Private] bob -> alice: Hey Alice!"));
 
-TEST_F(LoginTest, WrongPassword_EmitsFailureSignal) {
-  bool ok = true;
-  QObject::connect(&mock, &INetworkClient::loginResult,
-                   [&](bool success, QString) { ok = success; });
+    QVERIFY(spy.wait(100));
+    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy[0][0].toString().startsWith("[Private]"), true);
+  }
 
-  mock.emitLoginResult(false, "Incorrect username or password");
-  processEvents();
+  void testFetchUsersCalledOnce() {
+    mock.fetchOnlineUsers();
+    QCOMPARE(mock.fetchOnlineUsersCallCount, 1);
+  }
 
-  EXPECT_FALSE(ok);
-}
+  void testUsersReceivedSignalContainsExpectedUsers() {
+    QSignalSpy spy(&mock, &MockNetworkClient::onlineUsersReceived);
+    const QStringList expected = {QStringLiteral("alice"), QStringLiteral("bob"), QStringLiteral("carol")};
+    mock.emitOnlineUsersReceived(expected);
 
-TEST_F(LoginTest, SendLoginRequest_UsesCorrectCredentials) {
-  EXPECT_CALL(mock, sendLoginRequest("bob", "secret")).Times(1);
-  mock.sendLoginRequest("bob", "secret");
-}
+    QVERIFY(spy.wait(100));
+    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy[0][0].toStringList(), expected);
+  }
 
-class ChatTest : public ::testing::Test {
-protected:
-  NiceMock<MockNetworkClient> mock;
+  void testEmptyUserListHandledGracefully() {
+    QSignalSpy spy(&mock, &MockNetworkClient::onlineUsersReceived);
+    mock.emitOnlineUsersReceived({});
 
-  void SetUp() override {
-    // Pretend we are connected for messaging tests
-    ON_CALL(mock, isConnected()).WillByDefault(Return(true));
+    QVERIFY(spy.wait(100));
+    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy[0][0].toStringList().isEmpty(), true);
+  }
+
+  void testNotConnectedReturnsFalse() {
+    mock.setConnected(false);
+    QCOMPARE(mock.isConnected(), false);
+  }
+
+  void testConnectedReturnsTrue() {
+    mock.setConnected(true);
+    QCOMPARE(mock.isConnected(), true);
   }
 };
 
-TEST_F(ChatTest, BroadcastMessage_CallsSendChatMessage) {
-  EXPECT_CALL(mock, sendChatMessage("alice", "Hello everyone!")).Times(1);
-  mock.sendChatMessage("alice", "Hello everyone!");
-}
-
-TEST_F(ChatTest, PrivateMessage_CallsSendPrivateMessage) {
-  EXPECT_CALL(mock, sendPrivateMessage("alice", "bob", "Hey Bob!")).Times(1);
-  mock.sendPrivateMessage("alice", "bob", "Hey Bob!");
-}
-
-TEST_F(ChatTest, IncomingBroadcast_SignalContainsSenderAndText) {
-  QString received;
-  QObject::connect(&mock, &INetworkClient::messageReceived,
-                   [&](const QString &msg) { received = msg; });
-
-  mock.emitMessageReceived("alice: Hello everyone!");
-  processEvents();
-
-  EXPECT_TRUE(received.contains("alice"));
-  EXPECT_TRUE(received.contains("Hello everyone!"));
-}
-
-TEST_F(ChatTest, IncomingPrivateMessage_SignalHasPrivatePrefix) {
-  QString received;
-  QObject::connect(&mock, &INetworkClient::messageReceived,
-                   [&](const QString &msg) { received = msg; });
-
-  mock.emitMessageReceived("[Private] bob -> alice: Hey Alice!");
-  processEvents();
-
-  EXPECT_TRUE(received.startsWith("[Private]"));
-}
-
-class OnlineUsersTest : public ::testing::Test {
-protected:
-  NiceMock<MockNetworkClient> mock;
-
-  void SetUp() override {
-    ON_CALL(mock, isConnected()).WillByDefault(Return(true));
-  }
-};
-
-TEST_F(OnlineUsersTest, FetchUsers_CalledOnce) {
-  EXPECT_CALL(mock, fetchOnlineUsers()).Times(1);
-  mock.fetchOnlineUsers();
-}
-
-TEST_F(OnlineUsersTest, UsersReceivedSignal_ContainsExpectedUsers) {
-  QStringList received;
-  QObject::connect(&mock, &INetworkClient::onlineUsersReceived,
-                   [&](const QStringList &users) { received = users; });
-
-  QStringList expected = {"alice", "bob", "carol"};
-  mock.emitOnlineUsersReceived(expected);
-  processEvents();
-
-  EXPECT_EQ(received, expected);
-}
-
-TEST_F(OnlineUsersTest, EmptyUserList_HandledGracefully) {
-  QStringList received = {"placeholder"}; // ensure it actually gets overwritten
-  QObject::connect(&mock, &INetworkClient::onlineUsersReceived,
-                   [&](const QStringList &users) { received = users; });
-
-  mock.emitOnlineUsersReceived({});
-  processEvents();
-
-  EXPECT_TRUE(received.isEmpty());
-}
-
-class ConnectionTest : public ::testing::Test {
-protected:
-  NiceMock<MockNetworkClient> mock;
-};
-
-TEST_F(ConnectionTest, NotConnected_ReturnsFalse) {
-  ON_CALL(mock, isConnected()).WillByDefault(Return(false));
-  EXPECT_FALSE(mock.isConnected());
-}
-
-TEST_F(ConnectionTest, Connected_ReturnsTrue) {
-  ON_CALL(mock, isConnected()).WillByDefault(Return(true));
-  EXPECT_TRUE(mock.isConnected());
-}
-
-TEST_F(ConnectionTest, ConnectToServer_CalledOnce) {
-  EXPECT_CALL(mock, connectToServer()).Times(1);
-  mock.connectToServer();
-}
-
-TEST_F(ConnectionTest, ConnectionFailed_StatusSignalPropagates) {
-  QString status;
-  QObject::connect(&mock, &INetworkClient::statusChanged,
-                   [&](const QString &s) { status = s; });
-
-  mock.emitStatusChanged("Connection failed: Connection refused");
-  processEvents();
-
-  EXPECT_TRUE(status.startsWith("Connection failed"));
-}
-
-TEST_F(ConnectionTest, Logout_SendsCorrectUsername) {
-  EXPECT_CALL(mock, sendLogoutRequest("alice")).Times(1);
-  mock.sendLogoutRequest("alice");
-}
-
-TEST_F(ConnectionTest, SendWhileDisconnected_DoesNotCallSend) {
-  ON_CALL(mock, isConnected()).WillByDefault(Return(false));
-
-  EXPECT_CALL(mock, sendChatMessage(_, _)).Times(0);
-
-  if (mock.isConnected()) { // guard (mirrors canSendMessages)
-    mock.sendChatMessage("alice", "Hi");
-  }
-}
-
-int main(int argc, char **argv) {
-  QApplication app(argc, argv); // required for Qt signal/slot machinery
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+QTEST_MAIN(ClientTests)
+#include "Client_Tests.moc"

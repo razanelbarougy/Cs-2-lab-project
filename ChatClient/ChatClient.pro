@@ -11,7 +11,6 @@ CONFIG += c++17
 SOURCES += \
     chatbox.cpp \
     log_in.cpp \
-    main.cpp \
     mainwindow.cpp \
     networkclient.cpp
 
