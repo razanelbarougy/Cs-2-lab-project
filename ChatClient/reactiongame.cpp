@@ -1,5 +1,4 @@
 #include "reactiongame.h"
-#include "networkclient.h"
 #include "ui_reactiongame.h"
 
 reactiongame::reactiongame(NetworkClient *client, const QString &username, QWidget *parent)
