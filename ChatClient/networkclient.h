@@ -49,7 +49,6 @@ private slots:
 private:
     void sendJsonMessage(const QJsonObject &message);
     QTcpSocket *socket;
-    QByteArray buffer;
 };
 
 #endif // NETWORKCLIENT_H
