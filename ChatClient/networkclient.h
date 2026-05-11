@@ -20,6 +20,12 @@ public:
     void sendChatMessage(const QString &sender, const QString &text);
     void sendPrivateMessage(const QString &sender, const QString &reciever, const QString &text);
     void fetchOnlineUsers();
+    void sendTicTacToeJoin(const QString &username);
+    void sendTicTacToeMove(const QString &username, int row, int col);
+    void sendReactionGameJoin(const QString &username);
+    void sendReactionResponse(const QString &username);
+    void sendFetchScoreboard();
+
     bool isConnected() const;
 
 signals:
@@ -28,6 +34,13 @@ signals:
     void onlineUsersReceived(const QStringList &users);
     void signupResult(bool success, QString message) ;
     void loginResult(bool success, QString message) ;
+    void ticTacToeStarted(QString symbol, QString opponent);
+    void ticTacToeUpdated(QStringList board, QString turn);
+    void ticTacToeEnded(QString winner);
+    void reactionGoSignal();
+    void reactionGameEnded(QString winner);
+    void scoreboardReceived(QStringList scores);
+
 
 private slots:
     void onConnected();
@@ -36,6 +49,7 @@ private slots:
 private:
     void sendJsonMessage(const QJsonObject &message);
     QTcpSocket *socket;
+    QByteArray buffer;
 };
 
 #endif // NETWORKCLIENT_H
