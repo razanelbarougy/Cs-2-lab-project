@@ -80,7 +80,7 @@ void MainWindow::handleSResponse(bool success, QString message)
         chatWindow = new chatBox(client, usern, nullptr);
         chatWindow->show();
 
-        this->close() ;
+        this->hide() ;
     }
     else
     {
