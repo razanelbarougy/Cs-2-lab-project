@@ -105,6 +105,19 @@ bool registerUser(const std::string& username, const std::string& password) {
 awaitable<void> handle_client(std::shared_ptr<tcp::socket> socket) {
 char data[1024];
 std::string currentUser = "";
+    
+// Game state
+static std::map<std::string, std::shared_ptr<tcp::socket>> waitingPlayers;
+static std::map<std::string, std::vector<std::string>> gameBoards;
+static std::map<std::string, std::string> playerSymbols;
+static std::map<std::string, std::string> playerOpponents;
+static std::map<std::string, std::shared_ptr<tcp::socket>> playerSockets;
+
+// Reaction game state
+static std::map<std::string, std::shared_ptr<tcp::socket>> reactionWaiting;
+static std::map<std::string, std::shared_ptr<tcp::socket>> reactionPlayers;
+static std::string reactionWinner;
+
 
 while (true) {
 auto [ec, bytes_read] = co_await socket->async_read_some(
@@ -225,6 +238,146 @@ use_awaitable
 );
 }
 }
+        else if (type == "ticTacToeJoin") {
+            std::string username = extractField(message, "sender");
+            if (waitingPlayers.empty()) {
+                waitingPlayers[username] = socket;
+                std::string reply = R"({"type":"ticTacToeWait","message":"Waiting for opponent..."})";
+                reply += "\n";
+                co_await boost::asio::async_write(*socket, boost::asio::buffer(reply), use_awaitable);
+            } else {
+                auto it = waitingPlayers.begin();
+                std::string opponent = it->first;
+                std::shared_ptr<tcp::socket> opponentSocket = it->second;
+                waitingPlayers.clear();
+
+                std::vector<std::string> board(9, "");
+                playerSymbols[username] = "O";
+                playerSymbols[opponent] = "X";
+                playerOpponents[username] = opponent;
+                playerOpponents[opponent] = username;
+                playerSockets[username] = socket;
+                playerSockets[opponent] = opponentSocket;
+                gameBoards[username] = board;
+                gameBoards[opponent] = board;
+
+                std::string msgX = R"({"type":"ticTacToeStart","payload":{"yourSymbol":"X","opponent":")" + username + R"(","turn":"X"}})";
+                msgX += "\n";
+                std::string msgO = R"({"type":"ticTacToeStart","payload":{"yourSymbol":"O","opponent":")" + opponent + R"(","turn":"X"}})";
+                msgO += "\n";
+
+                co_await boost::asio::async_write(*opponentSocket, boost::asio::buffer(msgX), use_awaitable);
+                co_await boost::asio::async_write(*socket, boost::asio::buffer(msgO), use_awaitable);
+            }
+        }
+
+        else if (type == "ticTacToeMove") {
+            std::string username = extractField(message, "sender");
+            std::string rowStr = extractField(message, "row");
+            std::string colStr = extractField(message, "col");
+
+            int row = std::stoi(rowStr);
+            int col = std::stoi(colStr);
+            int index = row * 3 + col;
+
+            std::string symbol = playerSymbols[username];
+            std::string opponent = playerOpponents[username];
+            auto& board = gameBoards[username];
+            board[index] = symbol;
+            gameBoards[opponent] = board;
+
+            std::string boardJson = "[";
+            for (int i = 0; i < 9; i++) {
+                boardJson += "\"" + board[i] + "\"";
+                if (i < 8) boardJson += ",";
+            }
+            boardJson += "]";
+
+            int wins[8][3] = {{0,1,2},{3,4,5},{6,7,8},{0,3,6},{1,4,7},{2,5,8},{0,4,8},{2,4,6}};
+            bool won = false;
+            for (auto& w : wins) {
+                if (!board[w[0]].empty() && board[w[0]] == board[w[1]] && board[w[1]] == board[w[2]]) {
+                    won = true; break;
+                }
+            }
+
+            bool draw = !won;
+            if (draw) {
+                for (auto& cell : board) {
+                    if (cell.empty()) { draw = false; break; }
+                }
+            }
+
+            std::string nextTurn = (symbol == "X") ? "O" : "X";
+
+            if (won) {
+                std::string endMsg = R"({"type":"ticTacToeEnd","payload":{"winner":")" + username + R"("}})";
+                endMsg += "\n";
+                co_await boost::asio::async_write(*socket, boost::asio::buffer(endMsg), use_awaitable);
+                co_await boost::asio::async_write(*playerSockets[opponent], boost::asio::buffer(endMsg), use_awaitable);
+            } else if (draw) {
+                std::string endMsg = R"({"type":"ticTacToeEnd","payload":{"winner":"draw"}})";
+                endMsg += "\n";
+                co_await boost::asio::async_write(*socket, boost::asio::buffer(endMsg), use_awaitable);
+                co_await boost::asio::async_write(*playerSockets[opponent], boost::asio::buffer(endMsg), use_awaitable);
+            } else {
+                std::string updateMsg = R"({"type":"ticTacToeUpdate","payload":{"board":)" + boardJson + R"(,"turn":")" + nextTurn + R"("}})";
+                updateMsg += "\n";
+                co_await boost::asio::async_write(*socket, boost::asio::buffer(updateMsg), use_awaitable);
+                co_await boost::asio::async_write(*playerSockets[opponent], boost::asio::buffer(updateMsg), use_awaitable);
+            }
+        }
+
+        else if (type == "reactionGameJoin") {
+            std::string username = extractField(message, "sender");
+            reactionWaiting[username] = socket;
+            reactionPlayers[username] = socket;
+
+            if (reactionWaiting.size() >= 2) {
+                std::string goMsg = R"({"type":"reactionGo"})";
+                goMsg += "\n";
+                for (auto& p : reactionWaiting) {
+                    co_await boost::asio::async_write(*p.second, boost::asio::buffer(goMsg), use_awaitable);
+                }
+                reactionWaiting.clear();
+            } else {
+                std::string waitMsg = R"({"type":"reactionWait","message":"Waiting for opponent..."})";
+                waitMsg += "\n";
+                co_await boost::asio::async_write(*socket, boost::asio::buffer(waitMsg), use_awaitable);
+            }
+        }
+
+        else if (type == "reactionResponse") {
+            std::string username = extractField(message, "sender");
+            if (reactionWinner.empty()) {
+                reactionWinner = username;
+                std::string endMsg = R"({"type":"reactionEnd","payload":{"winner":")" + username + R"("}})";
+                endMsg += "\n";
+                for (auto& p : reactionPlayers) {
+                    co_await boost::asio::async_write(*p.second, boost::asio::buffer(endMsg), use_awaitable);
+                }
+                reactionPlayers.clear();
+                reactionWinner = "";
+            }
+        }
+
+        else if (type == "fetchScoreboard") {
+            std::ifstream scoreFile("scores.txt");
+            std::string line;
+            std::string response = "{\"type\":\"scoreboardResponse\",\"payload\":[";
+            bool first = true;
+            while (std::getline(scoreFile, line)) {
+                if (!line.empty()) {
+                    if (!first) response += ",";
+                    response += "\"" + line + "\"";
+                    first = false;
+                }
+            }
+            response += "]}\n";
+            co_await boost::asio::async_write(*socket, boost::asio::buffer(response), use_awaitable);
+        }
+
+
 else if (type == "fetchOnlineUsers") {
 std::string response = "{\"type\":\"onlineUsersResponse\",\"sender\":\"server\",\"payload\":[";
 

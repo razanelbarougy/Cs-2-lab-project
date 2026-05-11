@@ -32,6 +32,9 @@ private slots:
     void on_fetchUsersButton_clicked();
     void updateOnlineUsers(const QStringList &users);
     void on_logoutPushButton_clicked();
+    void on_playTicTacToeButton_clicked();
+    void on_playReactionButton_clicked();
+    void on_showScoreboardButton_clicked();
 };
 
 #endif // CHATBOX_H

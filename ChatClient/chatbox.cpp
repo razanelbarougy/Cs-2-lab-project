@@ -1,5 +1,8 @@
 #include "chatbox.h"
 #include "mainwindow.h"
+#include "reactiongame.h"
+#include "scoreboard.h"
+#include "tictactoe.h"
 #include "ui_chatbox.h"
 
 chatBox::chatBox(NetworkClient *client, const QString &username, QWidget *parent)
@@ -159,4 +162,19 @@ void chatBox::on_logoutPushButton_clicked()
 
     this->close();
 }
+void chatBox::on_playTicTacToeButton_clicked()
+{
+    tictactoe *game = new tictactoe(client, user, this);
+    game->show();
+}
 
+void chatBox::on_playReactionButton_clicked()
+{
+    reactiongame *game = new reactiongame(client, user, this);
+    game->show();
+}
+void chatBox::on_showScoreboardButton_clicked()
+{
+    scoreboard *sb = new scoreboard(client, user, this);
+    sb->show();
+}

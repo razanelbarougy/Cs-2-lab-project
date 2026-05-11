@@ -13,18 +13,27 @@ SOURCES += \
     log_in.cpp \
     main.cpp \
     mainwindow.cpp \
-    networkclient.cpp
+    networkclient.cpp \
+    reactiongame.cpp \
+    scoreboard.cpp \
+    tictactoe.cpp
 
 HEADERS += \
     chatbox.h \
     log_in.h \
     mainwindow.h \
-    networkclient.h
+    networkclient.h \
+    reactiongame.h \
+    scoreboard.h \
+    tictactoe.h
 
 FORMS += \
     chatbox.ui \
     log_in.ui \
-    mainwindow.ui
+    mainwindow.ui \
+    reactiongame.ui \
+    scoreboard.ui \
+    tictactoe.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

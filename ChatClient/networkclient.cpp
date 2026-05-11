@@ -232,6 +232,38 @@ void NetworkClient::onReadyRead()
 
         emit onlineUsersReceived(users);
     }
+    else if (type == "ticTacToeStart") {
+        QJsonObject payload = obj["payload"].toObject();
+        emit ticTacToeStarted(payload["yourSymbol"].toString(), payload["opponent"].toString());
+    }
+    else if (type == "ticTacToeUpdate") {
+        QJsonObject payload = obj["payload"].toObject();
+        QJsonArray boardArray = payload["board"].toArray();
+        QStringList board;
+        for (const QJsonValue &v : boardArray) {
+            board.append(v.toString());
+        }
+        emit ticTacToeUpdated(board, payload["turn"].toString());
+    }
+    else if (type == "ticTacToeEnd") {
+        QJsonObject payload = obj["payload"].toObject();
+        emit ticTacToeEnded(payload["winner"].toString());
+    }
+    else if (type == "reactionGo") {
+        emit reactionGoSignal();
+    }
+    else if (type == "reactionEnd") {
+        QJsonObject payload = obj["payload"].toObject();
+        emit reactionGameEnded(payload["winner"].toString());
+    }
+    else if (type == "scoreboardResponse") {
+        QJsonArray scoresArray = obj["payload"].toArray();
+        QStringList scores;
+        for (const QJsonValue &value : scoresArray) {
+            scores.append(value.toString());
+        }
+        emit scoreboardReceived(scores);
+    }
 }
 
 void NetworkClient::fetchOnlineUsers()
@@ -254,4 +286,49 @@ void NetworkClient::sendLogoutRequest(const QString& username)
     QJsonDocument doc(object);
     socket->write(doc.toJson(QJsonDocument::Compact));
     socket->write("\n");
+}
+void NetworkClient::sendTicTacToeJoin(const QString &username)
+{
+    QJsonObject message;
+    message["type"] = "ticTacToeJoin";
+    message["sender"] = username;
+    sendJsonMessage(message);
+}
+
+void NetworkClient::sendTicTacToeMove(const QString &username, int row, int col)
+{
+    QJsonObject payload;
+    payload["row"] = row;
+    payload["col"] = col;
+
+    QJsonObject message;
+    message["type"] = "ticTacToeMove";
+    message["sender"] = username;
+    message["payload"] = payload;
+
+    sendJsonMessage(message);
+}
+
+void NetworkClient::sendReactionGameJoin(const QString &username)
+{
+    QJsonObject message;
+    message["type"] = "reactionGameJoin";
+    message["sender"] = username;
+    sendJsonMessage(message);
+}
+
+void NetworkClient::sendReactionResponse(const QString &username)
+{
+    QJsonObject message;
+    message["type"] = "reactionResponse";
+    message["sender"] = username;
+    sendJsonMessage(message);
+}
+
+void NetworkClient::sendFetchScoreboard()
+{
+    QJsonObject message;
+    message["type"] = "fetchScoreboard";
+    message["sender"] = "";
+    sendJsonMessage(message);
 }
