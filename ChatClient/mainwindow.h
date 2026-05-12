@@ -43,6 +43,4 @@ private:
 
 };
 
-bool userExists(string username) ;
-
 #endif // MAINWINDOW_H
