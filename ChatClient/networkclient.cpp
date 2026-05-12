@@ -2,6 +2,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QMessageBox>
 
 NetworkClient::NetworkClient(QObject *parent)
     : QObject(parent), socket(new QTcpSocket(this))
@@ -264,6 +265,45 @@ void NetworkClient::onReadyRead()
         }
         emit scoreboardReceived(scores);
     }
+    else if (type == "createRoomResult") {
+        QString status = obj["status"].toString();
+        QString message = obj["message"].toString();
+        emit createRoomResult(status == "success", message);
+    }
+    else if (type == "joinRoomResult") {
+        QString status = obj["status"].toString();
+        QString message = obj["message"].toString();
+        emit joinRoomResult(status == "success", message);
+    }
+    else if (type == "leaveRoomResult") {
+        QString status = obj["status"].toString();
+        QString message = obj["message"].toString();
+        emit leaveRoomResult(status == "success", message);
+    }
+    else if (type == "roomMessage") {
+        QString roomName = obj["roomName"].toString();
+        QString sender = obj["sender"].toString();
+        QJsonObject payload = obj["payload"].toObject();
+        QString text = payload["text"].toString();
+        emit roomMessageReceived(roomName, sender, text);
+    }
+    else if (type == "roomsResponse") {
+        QJsonArray roomsArray = obj["payload"].toArray();
+        QStringList rooms;
+        for (const QJsonValue &value : roomsArray) {
+            rooms.append(value.toString());
+        }
+        emit roomsReceived(rooms);
+    }
+    else if (type == "roomUsersResponse") {
+        QString room = obj["room"].toString();
+        QJsonArray usersArray = obj["payload"].toArray();
+        QStringList users;
+        for (const QJsonValue &value : usersArray) {
+            users.append(value.toString());
+        }
+        emit roomUsersReceived(room, users);
+    }
 }
 
 void NetworkClient::fetchOnlineUsers()
@@ -331,4 +371,93 @@ void NetworkClient::sendFetchScoreboard()
     message["type"] = "fetchScoreboard";
     message["sender"] = "";
     sendJsonMessage(message);
+}
+
+void NetworkClient::sendCreateRoom(const QString &roomName, const QString &username)
+{
+    if (roomName.trimmed().isEmpty()) {
+        emit statusChanged("Room name cannot be empty.");
+        return;
+    }
+
+    QJsonObject message;
+    message["type"] = "createRoom";
+    message["roomName"] = roomName;
+    message["sender"] = username;
+    sendJsonMessage(message);
+    emit statusChanged("Create room request sent.");
+}
+
+void NetworkClient::sendJoinRoom(const QString &roomName, const QString &username)
+{
+    if (roomName.trimmed().isEmpty()) {
+        emit statusChanged("Room name cannot be empty.");
+        return;
+    }
+
+    QJsonObject message;
+    message["type"] = "joinRoom";
+    message["roomName"] = roomName;
+    message["sender"] = username;
+    sendJsonMessage(message);
+    emit statusChanged("Join room request sent.");
+}
+
+void NetworkClient::sendLeaveRoom(const QString &roomName, const QString &username)
+{
+    if (roomName.trimmed().isEmpty()) {
+        emit statusChanged("Room name cannot be empty.");
+        return;
+    }
+
+    QJsonObject message;
+    message["type"] = "leaveRoom";
+    message["roomName"] = roomName;
+    message["sender"] = username;
+    sendJsonMessage(message);
+    emit statusChanged("Leave room request sent.");
+}
+
+void NetworkClient::sendRoomMessage(const QString &roomName, const QString &username, const QString &text)
+{
+    if (roomName.trimmed().isEmpty()) {
+        emit statusChanged("Room name cannot be empty.");
+        return;
+    }
+
+    if (text.trimmed().isEmpty()) {
+        emit statusChanged("Message cannot be empty.");
+        return;
+    }
+
+    QJsonObject payload;
+    payload["text"] = text;
+
+    QJsonObject message;
+    message["type"] = "roomMessage";
+    message["roomName"] = roomName;
+    message["sender"] = username;
+    message["payload"] = payload;
+
+    sendJsonMessage(message);
+    emit statusChanged("Room message sent.");
+}
+
+void NetworkClient::fetchRooms()
+{
+    QJsonObject message;
+    message["type"] = "fetchRooms";
+    message["sender"] = "";
+    sendJsonMessage(message);
+    emit statusChanged("Fetch rooms request sent.");
+}
+
+void NetworkClient::fetchRoomUsers(const QString &roomName)
+{
+    QJsonObject message;
+    message["type"] = "fetchRoomUsers";
+    message["roomName"] = roomName;
+    message["sender"] = "";
+    sendJsonMessage(message);
+    emit statusChanged("Fetch room users request sent.");
 }

@@ -1,5 +1,6 @@
 #include "scoreboard.h"
 #include "ui_scoreboard.h"
+#include <QMessageBox>
 
 scoreboard::scoreboard(NetworkClient *client, const QString &username, QWidget *parent)
     : QDialog(parent)
