@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include<fstream>
 #include <QMessageBox>
 
 using namespace std;
@@ -22,23 +21,6 @@ MainWindow::MainWindow(NetworkClient *client, QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
-}
-
-bool userExists(string username)
-{
-    QString projectDir = QCoreApplication::applicationDirPath().section("/build", 0, 0);
-    ifstream file((projectDir + "/users.txt").toStdString());
-
-    string storedUsername , storedPassword ;
-    while(file>>storedUsername>>storedPassword)
-    {
-        if(storedUsername==username)
-        {
-            return true ;
-        }
-    }
-
-    return false ;
 }
 
 void MainWindow::on_signupButton_clicked()
