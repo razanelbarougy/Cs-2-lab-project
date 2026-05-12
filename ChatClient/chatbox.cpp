@@ -4,6 +4,7 @@
 #include "scoreboard.h"
 #include "tictactoe.h"
 #include "ui_chatbox.h"
+#include <QMessageBox>
 
 chatBox::chatBox(NetworkClient *client, const QString &username, QWidget *parent)
     : QDialog(parent)
@@ -22,6 +23,13 @@ chatBox::chatBox(NetworkClient *client, const QString &username, QWidget *parent
     });
 
     connect(client, &NetworkClient::onlineUsersReceived, this, &chatBox::updateOnlineUsers);
+
+    connect(client, &NetworkClient::createRoomResult, this, &chatBox::handleCreateRoomResult);
+    connect(client, &NetworkClient::joinRoomResult, this, &chatBox::handleJoinRoomResult);
+    connect(client, &NetworkClient::leaveRoomResult, this, &chatBox::handleLeaveRoomResult);
+    connect(client, &NetworkClient::roomsReceived, this, &chatBox::updateRooms);
+    connect(client, &NetworkClient::roomUsersReceived, this, &chatBox::updateRoomUsers);
+    connect(client, &NetworkClient::roomMessageReceived, this, &chatBox::handleRoomMessage);
 
     setAttribute(Qt::WA_DeleteOnClose);
 }
@@ -177,4 +185,130 @@ void chatBox::on_showScoreboardButton_clicked()
 {
     scoreboard *sb = new scoreboard(client, user, this);
     sb->show();
+}
+
+void chatBox::on_createRoomButton_clicked()
+{
+    if (!canSendMessages()) return;
+
+    QString roomName = ui->roomNameLineEdit->text().trimmed();
+    if (roomName.isEmpty()) {
+        ui->statusLabel->setText("Enter a room name.");
+        return;
+    }
+
+    client->sendCreateRoom(roomName, user);
+}
+
+void chatBox::on_joinRoomButton_clicked()
+{
+    if (!canSendMessages()) return;
+
+    QString roomName = ui->roomNameLineEdit->text().trimmed();
+    if (roomName.isEmpty()) {
+        ui->statusLabel->setText("Enter a room name.");
+        return;
+    }
+
+    client->sendJoinRoom(roomName, user);
+}
+
+void chatBox::on_leaveRoomButton_clicked()
+{
+    if (!canSendMessages()) return;
+
+    QString roomName = ui->roomNameLineEdit->text().trimmed();
+    if (roomName.isEmpty()) {
+        ui->statusLabel->setText("Enter a room name.");
+        return;
+    }
+
+    client->sendLeaveRoom(roomName, user);
+}
+
+void chatBox::on_sendRoomMessageButton_clicked()
+{
+    if (!canSendMessages()) return;
+
+    QString roomName = ui->roomNameLineEdit->text().trimmed();
+    QString message = ui->messageLineEdit->text().trimmed();
+
+    if (roomName.isEmpty()) {
+        ui->statusLabel->setText("Enter a room name.");
+        return;
+    }
+
+    if (message.isEmpty()) {
+        ui->statusLabel->setText("Enter a message.");
+        return;
+    }
+
+    client->sendRoomMessage(roomName, user, message);
+    ui->chatTextEdit->append("[" + roomName + "] " + user + ": " + message);
+    ui->messageLineEdit->clear();
+}
+
+void chatBox::on_fetchRoomsButton_clicked()
+{
+    if (!canSendMessages()) return;
+
+    client->fetchRooms();
+}
+
+void chatBox::on_fetchRoomUsersButton_clicked()
+{
+    if (!canSendMessages()) return;
+
+    QString roomName = ui->roomNameLineEdit->text().trimmed();
+    if (roomName.isEmpty()) {
+        ui->statusLabel->setText("Enter a room name.");
+        return;
+    }
+
+    client->fetchRoomUsers(roomName);
+}
+
+void chatBox::handleCreateRoomResult(bool success, QString message)
+{
+    if (success) {
+        QMessageBox::information(this, "Success", message);
+    } else {
+        QMessageBox::warning(this, "Error", message);
+    }
+}
+
+void chatBox::handleJoinRoomResult(bool success, QString message)
+{
+    if (success) {
+        QMessageBox::information(this, "Success", message);
+    } else {
+        QMessageBox::warning(this, "Error", message);
+    }
+}
+
+void chatBox::handleLeaveRoomResult(bool success, QString message)
+{
+    if (success) {
+        QMessageBox::information(this, "Success", message);
+    } else {
+        QMessageBox::warning(this, "Error", message);
+    }
+}
+
+void chatBox::updateRooms(const QStringList &rooms)
+{
+    ui->roomsListWidget->clear();
+    ui->roomsListWidget->addItems(rooms);
+}
+
+void chatBox::updateRoomUsers(QString room, QStringList users)
+{
+    ui->roomUsersListWidget->clear();
+    ui->roomUsersListWidget->addItems(users);
+    ui->statusLabel->setText("Users in room: " + room);
+}
+
+void chatBox::handleRoomMessage(QString room, QString sender, QString text)
+{
+    ui->chatTextEdit->append("[" + room + "] " + sender + ": " + text);
 }

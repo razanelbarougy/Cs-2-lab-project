@@ -25,6 +25,12 @@ public:
     void sendReactionGameJoin(const QString &username);
     void sendReactionResponse(const QString &username);
     void sendFetchScoreboard();
+    void sendCreateRoom(const QString &roomName, const QString &username);
+    void sendJoinRoom(const QString &roomName, const QString &username);
+    void sendLeaveRoom(const QString &roomName, const QString &username);
+    void sendRoomMessage(const QString &roomName, const QString &username, const QString &text);
+    void fetchRooms();
+    void fetchRoomUsers(const QString &roomName);
 
     bool isConnected() const;
 
@@ -40,6 +46,12 @@ signals:
     void reactionGoSignal();
     void reactionGameEnded(QString winner);
     void scoreboardReceived(QStringList scores);
+    void createRoomResult(bool success, QString message);
+    void joinRoomResult(bool success, QString message);
+    void leaveRoomResult(bool success, QString message);
+    void roomMessageReceived(QString room, QString sender, QString text);
+    void roomsReceived(QStringList rooms);
+    void roomUsersReceived(QString room, QStringList users);
 
 
 private slots:

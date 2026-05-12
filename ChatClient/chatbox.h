@@ -35,6 +35,18 @@ private slots:
     void on_playTicTacToeButton_clicked();
     void on_playReactionButton_clicked();
     void on_showScoreboardButton_clicked();
+    void on_createRoomButton_clicked();
+    void on_joinRoomButton_clicked();
+    void on_leaveRoomButton_clicked();
+    void on_sendRoomMessageButton_clicked();
+    void on_fetchRoomsButton_clicked();
+    void on_fetchRoomUsersButton_clicked();
+    void handleCreateRoomResult(bool success, QString message);
+    void handleJoinRoomResult(bool success, QString message);
+    void handleLeaveRoomResult(bool success, QString message);
+    void updateRooms(const QStringList &rooms);
+    void updateRoomUsers(QString room, QStringList users);
+    void handleRoomMessage(QString room, QString sender, QString text);
 };
 
 #endif // CHATBOX_H

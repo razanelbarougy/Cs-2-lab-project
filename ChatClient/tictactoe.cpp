@@ -1,5 +1,6 @@
 #include "tictactoe.h"
 #include "ui_tictactoe.h"
+#include <QMessageBox>
 
 tictactoe::tictactoe(NetworkClient *client, const QString &username, QWidget *parent)
     : QDialog(parent)
